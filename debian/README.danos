@@ -1,0 +1,61 @@
+## Versioning
+
+The package version matches that from Debian, with the additional suffix of `+danos<n>`.
+
+`<n>` is set to 1 on each import of a new version from Debian, and incremented by 1 on commit
+of a DANOS specific change.
+
+For example, the upstream version `1:7.9p1-10+deb10u2` becomes `1:7.9p1-10+deb10u2+danos1`
+on import, then `1:7.9p1-10+deb10u2+danos2` after a further DANOS specific change.
+
+
+## Importing a new version from Debian
+
+Note current patch branch state:
+
+    grep -v ^\# debian/.git-dpm | head -n 1
+
+Merge in upstream changes, accepting upstream's hunks in debian/patches, debian/.git-dpm and
+the openssh source tree:
+
+    git merge debian/<new-ver>
+
+Checkout (now identical to upstream) patch branch:
+
+    git-dpm checkout-patched
+
+Cherry pick the missing DANOS specific patches, using previously noted branch state as a reference:
+
+    git cherry-pick ...
+
+Update patches on the main branch:
+
+    git-dpm --allow-changes-in-debian update-patches
+
+`--allow-changes-in-debian` is required as `git-dpm` deems any of the cherry picked patches, which
+were previously applied in the DANOS branch, as diffs to upstream (ie. they are not represented by
+a commit in the patch branch currently recorded in debian/.git-dpm).
+
+Check the final main branch state is as expected, by diffing against the new upstream:
+
+    git diff debian/<new-ver>
+
+The only changes which should be observed in the openssh source tree should be those of the just
+cherry picked patches. New patch files in debian/patches should also be observed for each of the
+cherry picked patches (along with corresponding entries in debian/patches/series). Finally we expect
+changes to debian/.git-dpm along with any other packaging tweaks applied for DANOS, such as changelog
+entries or changes to the control file.
+
+Finally proceed with usual changelog updates, tagging, and pushing.
+
+
+## Cherry picking commits from upstream
+
+Upstream commits can be applied as a patch automatically using `git-dpm`.
+
+    git remote add upstream https://github.com/openssh/openssh-portable.git
+    git fetch upstream
+    git-dpm cherry-pick -x <id>
+
+HEAD should now point to a merge commit representing the import of the specified commit. The merge
+commit can be edited to include a ticket reference if required.
