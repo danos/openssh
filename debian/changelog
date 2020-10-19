@@ -1,3 +1,9 @@
+openssh (1:7.9p1-10+deb10u2+danos1) UNRELEASED; urgency=medium
+
+  * debian: Update maintainer
+
+ -- Duncan Eastoe <duncan.eastoe@att.com>  Tue, 20 Oct 2020 16:29:19 +0100
+
 openssh (1:7.9p1-10+deb10u2) buster; urgency=medium
 
   * Apply upstream patch to deny (non-fatally) ipc in the seccomp sandbox,
