@@ -34,3 +34,4 @@ scp-handle-braces.patch
 revert-ipqos-defaults.patch
 seccomp-handle-shm.patch
 sandbox-seccomp-ipc.patch
+0037-expose-SSH_CONNECTION-in-the-PAM-environment.patch

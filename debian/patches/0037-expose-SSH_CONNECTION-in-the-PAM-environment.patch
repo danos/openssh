@@ -1,0 +1,69 @@
+From 7e9b632b0655d063cf395a52d8a04f591305a094 Mon Sep 17 00:00:00 2001
+From: Damien Miller <djm@mindrot.org>
+Date: Fri, 7 Dec 2018 15:41:16 +1100
+Subject: expose $SSH_CONNECTION in the PAM environment
+
+This makes the connection 4-tuple available to PAM modules that
+wish to use it in decision-making. bz#2741
+
+(cherry picked from commit 8a22ffaa13391cfe5b40316d938fe0fb931e9296)
+---
+ auth-pam.c | 10 ++++++++++
+ session.c  | 11 +++++++----
+ 2 files changed, 17 insertions(+), 4 deletions(-)
+
+diff --git a/auth-pam.c b/auth-pam.c
+index 1dec53e92..d67324e1f 100644
+--- a/auth-pam.c
++++ b/auth-pam.c
+@@ -673,6 +673,7 @@ sshpam_init(Authctxt *authctxt)
+ {
+ 	const char *pam_rhost, *pam_user, *user = authctxt->user;
+ 	const char **ptr_pam_user = &pam_user;
++	char *laddr, *conninfo;
+ 	struct ssh *ssh = active_state; /* XXX */
+ 
+ 	if (sshpam_handle != NULL) {
+@@ -702,6 +703,15 @@ sshpam_init(Authctxt *authctxt)
+ 		sshpam_handle = NULL;
+ 		return (-1);
+ 	}
++
++        laddr = get_local_ipaddr(packet_get_connection_in());
++        xasprintf(&conninfo, "SSH_CONNECTION=%.50s %d %.50s %d",
++	    ssh_remote_ipaddr(ssh), ssh_remote_port(ssh),
++	    laddr, ssh_local_port(ssh));
++	pam_putenv(sshpam_handle, conninfo);
++	free(laddr);
++	free(conninfo);
++
+ #ifdef PAM_TTY_KLUDGE
+ 	/*
+ 	 * Some silly PAM modules (e.g. pam_time) require a TTY to operate.
+diff --git a/session.c b/session.c
+index 19f38637e..38b86a42d 100644
+--- a/session.c
++++ b/session.c
+@@ -1162,15 +1162,18 @@ do_setup_env(struct ssh *ssh, Session *s, const char *shell)
+ 		char **p;
+ 
+ 		/*
+-		 * Don't allow SSH_AUTH_INFO variables posted to PAM to leak
+-		 * back into the environment.
++		 * Don't allow PAM-internal env vars to leak
++		 * back into the session environment.
+ 		 */
++#define PAM_ENV_BLACKLIST  "SSH_AUTH_INFO*,SSH_CONNECTION*"
+ 		p = fetch_pam_child_environment();
+-		copy_environment_blacklist(p, &env, &envsize, "SSH_AUTH_INFO*");
++		copy_environment_blacklist(p, &env, &envsize,
++		    PAM_ENV_BLACKLIST);
+ 		free_pam_environment(p);
+ 
+ 		p = fetch_pam_environment();
+-		copy_environment_blacklist(p, &env, &envsize, "SSH_AUTH_INFO*");
++		copy_environment_blacklist(p, &env, &envsize,
++		    PAM_ENV_BLACKLIST);
+ 		free_pam_environment(p);
+ 	}
+ #endif /* USE_PAM */
