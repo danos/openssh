@@ -1,8 +1,13 @@
-openssh (1:7.9p1-10+deb10u2+danos1) UNRELEASED; urgency=medium
+openssh (1:7.9p1-10+deb10u2+danos1) unstable; urgency=medium
 
+  [ Duncan Eastoe ]
   * debian: Update maintainer
+  * debian: Add README.danos
 
- -- Duncan Eastoe <duncan.eastoe@att.com>  Tue, 20 Oct 2020 16:29:19 +0100
+  [ Damien Miller ]
+  * expose $SSH_CONNECTION in the PAM environment
+
+ -- Duncan Eastoe <duncan.eastoe@att.com>  Fri, 23 Oct 2020 14:37:29 +0100
 
 openssh (1:7.9p1-10+deb10u2) buster; urgency=medium
 
